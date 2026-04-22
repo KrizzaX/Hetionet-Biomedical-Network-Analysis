@@ -1,0 +1,14 @@
+# Ignore large dataset files
+nodes.tsv
+edges.tsv
+
+# Ignore Spark output folders
+q1_all_results/
+q1_top5_results/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore system files
+.DS_Store
