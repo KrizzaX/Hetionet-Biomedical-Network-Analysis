@@ -1,18 +1,12 @@
-from pyspark.sql import SparkSession
+from load_data import load_tables
 from pyspark.sql.functions import col, countDistinct, desc
 
-spark = SparkSession.builder.appName("Project2_Q1").getOrCreate()
+spark, nodes, edges = load_tables()
 
-# Load files
-nodes = spark.read.option("sep", "\t").option("header", True).csv("nodes.tsv")
-edges = spark.read.option("sep", "\t").option("header", True).csv("edges.tsv")
-
-# Get node IDs by type
 drug_nodes = nodes.filter(col("kind") == "Compound").select(col("id").alias("drug_id"))
 gene_nodes = nodes.filter(col("kind") == "Gene").select(col("id").alias("gene_id"))
 disease_nodes = nodes.filter(col("kind") == "Disease").select(col("id").alias("disease_id"))
 
-# Drug -> Gene edges
 drug_gene_edges = edges.join(
     drug_nodes,
     edges["source"] == drug_nodes["drug_id"],
@@ -26,7 +20,6 @@ drug_gene_edges = edges.join(
     edges["target"].alias("gene_id")
 )
 
-# Drug -> Disease edges
 drug_disease_edges = edges.join(
     drug_nodes,
     edges["source"] == drug_nodes["drug_id"],
@@ -55,13 +48,9 @@ q1_result = gene_counts.join(disease_counts, on="drug_id", how="outer") \
 # Top 5 drugs by gene count descending
 top5_q1 = q1_result.orderBy(desc("num_genes")).limit(5)
 
-print("All Q1 results:")
-q1_result.show(truncate=False)
-
 print("Top 5 drugs by number of genes:")
 top5_q1.show(truncate=False)
 
-q1_result.write.mode("overwrite").option("header", True).csv("q1_all_results")
 top5_q1.write.mode("overwrite").option("header", True).csv("q1_top5_results")
 
 spark.stop()
